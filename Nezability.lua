@@ -161,7 +161,7 @@ function Nezability:new(o)
 				name = "Stagger",
 				sprite = "Icon_SkillShadow_UI_stlkr_staggeringthrust",
 				iaTiers = {
-					1, 1, 1, 1, 1, 1, 1, 1, 1
+					1, 1, 1, 1, 2, 2, 2, 2, 2
 				}
 			},
 			
@@ -193,7 +193,7 @@ function Nezability:new(o)
 				name = "Arcane Shock",
 				sprite = "Icon_SkillSpellslinger_arcane_shock",
 				iaTiers = {
-					1, 1, 1, 1, 1, 1, 1, 1, 1
+					1, 1, 1, 1, 2, 2, 2, 2, 2
 				}
 			},
 		
@@ -209,7 +209,7 @@ function Nezability:new(o)
 				name = "Gate",
 				sprite = "Icon_SkillSpellslinger_gate",
 				iaTiers = {
-					1, 1, 1, 1, 2, 2, 2, 2, 2
+					1, 1, 1, 1, 1, 1, 1, 1, 2
 				}
 			},
 		}
@@ -460,7 +460,7 @@ function Nezability:OnAbilityBookChange()
 	debugprint("LAS Change detected.")
 end
 
-function Nezability:OnITChannelMessage(channel, tMsg, strSender)
+function Nezability:OnITChannelMessage(channel, Msg, strSender)
 	--Prevents people from malicously flooding channel with fake messages.
 	local inGroup = false
 	--debugprint("Message Recieved from " .. strSender .. ".")
@@ -475,6 +475,7 @@ function Nezability:OnITChannelMessage(channel, tMsg, strSender)
 	debugprint("Sender validated.")
 	
 	--Handle message
+	tMsg = loadstring(Msg)
 	self.message = tMsg
 
 	if not tMsg then
@@ -513,8 +514,9 @@ function Nezability:SendUpdate()
 	
 	self.group[self.playername].spells = update.spells
 	self:UpdateTotalIA(self.playername)
+	updateStr = UpdateToString(update)
 	if self.channel then
-		self.channel:SendMessage(update)
+		self.channel:SendMessage(updateStr)
 		debugprint("Message Sent!")
 	else
 		debugprint("No channel found.")
@@ -739,6 +741,30 @@ function debugprint(str)
 		Print(str)
 	end
 end
+
+function UpdateToString(tbl)
+	local s = {"spells = {"}
+	
+	for i=1,#tbl.spells do
+		s[#s+1] = "{"
+		for j=1,#tbl.spells[i] do
+			if j==1 then s[#s+1]= "id = " end
+			if j==2 then s[#s+1]= "ai = " end
+			if j==3 then s[#s+1]= "cd = " end
+			s[#s+1] = tbl.spells[i][j]
+			if j<3 then s[#s+1] = ","end
+		end
+		s[#s+1] = "}"
+		if i<#tbl.spells then 
+			s[#s+1] = ","
+		end
+	end
+	s[#s+1] = "}"
+	s = table.concat(s)
+	r = "{"..s..", type = "..tbl.type..", classId = "..tbl.classId.."}"
+	return r
+end
+
 
 
 -----------------------------------------------------------------------------------------------
