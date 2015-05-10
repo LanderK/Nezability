@@ -18,6 +18,8 @@ local ITMsg = {
 	Left = 3
 }
 
+local CheckInChannelTimer
+
 --Debugging
 local NezabilityDebug = false
 
@@ -243,8 +245,8 @@ function Nezability:OnDocLoaded()
 	self:InitWindow()
 
 	--Event Handlers/Timers/Slash Commands
-	Apollo.RegisterTimerHandler("HalfSecTimer", "OnHalfSecond", self)
-	Apollo.RegisterTimerHandler("CheckInChannelTimer", "OnCheckInChannel", self)
+	--Apollo.RegisterTimerHandler("HalfSecTimer", "OnHalfSecond", self)
+	--Apollo.RegisterTimerHandler("CheckInChannelTimer", "OnCheckInChannel", self)
 
 	Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
 	Apollo.RegisterEventHandler("Group_Join", "OnGroupJoin", self)
@@ -279,7 +281,7 @@ function Nezability:OnWindowManagementReady()
 	
 	debugprint("Starting main loop.")
 	--Begin 'main loop'
-	Apollo.CreateTimer("HalfSecTimer", 0.5, true)
+	ApolloTimer.Create(0.5, true, "OnHalfSecond", self)
 
 	if self.savedSettings then
 		self.settings = self.savedSettings
@@ -366,14 +368,11 @@ function Nezability:OnGroupJoin()
 	debugprint("Joining channel on " .. self.partyLeader .. "...")
 	--Attempt to join the group channel
 	self.channel = ICCommLib.JoinChannel("IT_" .. self.partyLeader,ICCommLib.CodeEnumICCommChannelType.Global)
-	self.channel:SetJoinResultFunction("OnITChannelMessage",self)
+	self.channel:SetJoinResultFunction("OnITChannelJoin",self)
 	self.channel:IsReady()
 	self.channel:SetReceivedMessageFunction("OnITChannelMessage",self)
 	--self.channel = ICCommLib.JoinChannel("IT_" .. self.partyLeader, "OnITChannelMessage", self)
 	
-	--Start the channel timer (see CheckInChannelTimer() for an explanation)
-	Apollo.CreateTimer("CheckInChannelTimer", 1, true)
-
 	self.wndMain:Invoke()
 	self:UpdateUI()
 end
@@ -387,7 +386,7 @@ function Nezability:OnGroupLeft()
 	
 	--Sometimes the timer will still be going
 	--Probably should figure out why but this fixes it regardless
-	Apollo.StopTimer("CheckInChannelTimer")
+	CheckInChannelTimer:Stop()
 	
 	--Empty Windows are still bad
 	self:UpdateMyInterrupts()
@@ -459,6 +458,11 @@ function Nezability:OnAbilityBookChange()
 	self.onLASUpdate = true
 	debugprint("LAS Change detected.")
 end
+
+function Nezability:OnITChannelJoin()
+	--Start the channel timer (see CheckInChannelTimer() for an explanation)
+	CheckInChannelTimer = ApolloTimer.Create(1, true, "OnCheckInChannel", self)
+end 
 
 function Nezability:OnITChannelMessage(channel, Msg, strSender)
 	--Prevents people from malicously flooding channel with fake messages.
@@ -604,10 +608,10 @@ function Nezability:OnCheckInChannel()
 	--will break a lot of other addons too (lol)
 	if self.inChannel then return end
 	debugprint("Attempting to join channel.")
-	if self.channel and self.channel:SendMessage(ITMsg.Join) then
+	if self.channel and self.channel:SendMessage("{type = ITMsg.Join}") then
 		self.inChannel = true
 		self:SendUpdate()
-		Apollo.StopTimer("CheckInChannelTimer")
+		CheckInChannelTimer:Stop()
 		debugprint("Channel joined!")
 	end
 end
