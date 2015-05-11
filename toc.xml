@@ -2,5 +2,8 @@
 <Addon Author="Nezha" APIVersion="10" Name="Nezability" Description="An addon to help coordinate interrupts between party members." Version="1.1">
     <Script Name="Nezability.lua"/>
     <Script Name="Nezability_UI.lua"/>
+	<!--Libraries-->
+	<Script Name="Libs/LibJSON/LibJSON-2.5.lua"/>
+	<!--Forms-->
     <Form Name="Nezability.xml"/>
 </Addon>

@@ -6,6 +6,7 @@
 
 require "Window"
 require "ICCommLib"
+require "ICComm"
  
 -----------------------------------------------------------------------------------------------
 -- Nezability Module Definition
@@ -17,8 +18,8 @@ local ITMsg = {
 	Update = 2,
 	Left = 3
 }
-
-local CheckInChannelTimer
+--Encoding and Decoding Package
+local JSON = Apollo.GetPackage("Lib:dkJSON-2.5").tPackage
 
 --Debugging
 local NezabilityDebug = false
@@ -245,8 +246,8 @@ function Nezability:OnDocLoaded()
 	self:InitWindow()
 
 	--Event Handlers/Timers/Slash Commands
-	--Apollo.RegisterTimerHandler("HalfSecTimer", "OnHalfSecond", self)
-	--Apollo.RegisterTimerHandler("CheckInChannelTimer", "OnCheckInChannel", self)
+	Apollo.RegisterTimerHandler("HalfSecTimer", "OnHalfSecond", self)
+	Apollo.RegisterTimerHandler("CheckInChannelTimer", "OnCheckInChannel", self)
 
 	Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
 	Apollo.RegisterEventHandler("Group_Join", "OnGroupJoin", self)
@@ -281,7 +282,7 @@ function Nezability:OnWindowManagementReady()
 	
 	debugprint("Starting main loop.")
 	--Begin 'main loop'
-	ApolloTimer.Create(0.5, true, "OnHalfSecond", self)
+	Apollo.CreateTimer("HalfSecTimer", 0.5, true)
 
 	if self.savedSettings then
 		self.settings = self.savedSettings
@@ -367,7 +368,7 @@ function Nezability:OnGroupJoin()
 	
 	debugprint("Joining channel on " .. self.partyLeader .. "...")
 	--Attempt to join the group channel
-	self.channel = ICCommLib.JoinChannel("IT_" .. self.partyLeader,ICCommLib.CodeEnumICCommChannelType.Global)
+	self.channel = ICCommLib.JoinChannel("Nezability",ICCommLib.CodeEnumICCommChannelType.Group)
 	self.channel:SetJoinResultFunction("OnITChannelJoin",self)
 	self.channel:IsReady()
 	self.channel:SetReceivedMessageFunction("OnITChannelMessage",self)
@@ -386,7 +387,7 @@ function Nezability:OnGroupLeft()
 	
 	--Sometimes the timer will still be going
 	--Probably should figure out why but this fixes it regardless
-	CheckInChannelTimer:Stop()
+	Apollo.StopTimer("CheckInChannelTimer")
 	
 	--Empty Windows are still bad
 	self:UpdateMyInterrupts()
@@ -461,10 +462,10 @@ end
 
 function Nezability:OnITChannelJoin()
 	--Start the channel timer (see CheckInChannelTimer() for an explanation)
-	CheckInChannelTimer = ApolloTimer.Create(1, true, "OnCheckInChannel", self)
+	Apollo.CreateTimer("CheckInChannelTimer", 1, true)
 end 
 
-function Nezability:OnITChannelMessage(channel, Msg, strSender)
+function Nezability:OnITChannelMessage(channel, strMsg, strSender)
 	--Prevents people from malicously flooding channel with fake messages.
 	local inGroup = false
 	--debugprint("Message Recieved from " .. strSender .. ".")
@@ -479,7 +480,7 @@ function Nezability:OnITChannelMessage(channel, Msg, strSender)
 	debugprint("Sender validated.")
 	
 	--Handle message
-	loadstring("tMsg ="..Msg)()
+	local tMsg = JSON.decode(strMsg)
 	self.message = tMsg
 
 	if not tMsg then
@@ -494,7 +495,8 @@ function Nezability:OnITChannelMessage(channel, Msg, strSender)
 end
 
 function Nezability:SendUpdate()
-	--Build update table to send
+	local updateStr
+	--Build update table
 	local update = {}
 	update.spells = {}
 	update.type = ITMsg.Update
@@ -518,7 +520,7 @@ function Nezability:SendUpdate()
 	
 	self.group[self.playername].spells = update.spells
 	self:UpdateTotalIA(self.playername)
-	updateStr = table.tostring(update)
+	updateStr = JSON.encode(update)
 	if self.channel then
 		self.channel:SendMessage(updateStr)
 		debugprint("Message Sent!")
@@ -608,10 +610,10 @@ function Nezability:OnCheckInChannel()
 	--will break a lot of other addons too (lol)
 	if self.inChannel then return end
 	debugprint("Attempting to join channel.")
-	if self.channel and self.channel:SendMessage("{type = ITMsg.Join}") then
+	if self.channel and self.channel:SendMessage(JSON.encode({type = ITMsg.Join})) then
 		self.inChannel = true
 		self:SendUpdate()
-		CheckInChannelTimer:Stop()
+		Apollo.StopTimer("CheckInChannelTimer")
 		debugprint("Channel joined!")
 	end
 end
@@ -745,7 +747,7 @@ function debugprint(str)
 	end
 end
 
-function table.val_to_str ( v )
+--[[function table.val_to_str ( v )
   if "string" == type( v ) then
     v = string.gsub( v, "\n", "\\n" )
     if string.match( string.gsub(v,"[^'\"]",""), '^"+$' ) then
@@ -793,7 +795,7 @@ function table.tostring( tbl )
     end
   end
   return "{" .. table.concat( result, "," ) .. "}"
-end
+end]]
 
 
 
