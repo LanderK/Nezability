@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------
 -- Client Lua Script for Nezability
 -- Copyright (c) NCsoft. All rights reserved	
--- CREATED BY: Nezha, Using Accountability by Allie, DoctorHouse
+-- CREATED BY: Nezha, Using Accountability by Allie, DoctorHouse . Addition help from Aliette Harkens
 -----------------------------------------------------------------------------------------------
 
 require "Window"
@@ -44,7 +44,6 @@ function Nezability:new(o)
 
 	o.group = {}            --Keep track of the group's interrupt
 	o.myInterrupts = {}     --Keep track of your own interrupts
-	o.partyLeader = nil     --Used for creating unique channels 
 	o.channel = nil         --Current group channel, nil if not in a group
 	o.inChannel = false     --Flag for tracking channel connection status
 	o.message = nil         --Most recent message recieved
@@ -185,11 +184,6 @@ function Nezability:new(o)
 			},
 		},
 		
-		-- MYSTERY CLASS (deathknights!??!)
-		{
-		
-		},
-	
 		-- Spellslinger
 		{
 			[30160] = {
@@ -290,7 +284,6 @@ function Nezability:OnWindowManagementReady()
 		self:ApplySettings()
 	end
 	
-	--self.wndMain:Invoke()
 	
 	--This flag lets the rest of the addon know that WindowManagementReady has been called
 	--and resources in GroupLib/GameLib should be available, i.e. not nil
@@ -359,20 +352,14 @@ function Nezability:OnGroupJoin()
 			self.group[player.strCharacterName].classId = player.eClassId
 			self.group[player.strCharacterName].spells = {}
 		end
-		--For creating unique channel names
-		if player.bIsLeader then
-			debugprint(player.strCharacterName .. " is leader.")
-			self.partyLeader = player.strCharacterName
-		end
 	end
 	
-	debugprint("Joining channel on " .. self.partyLeader .. "...")
+	debugprint("Joining channel")
 	--Attempt to join the group channel
 	self.channel = ICCommLib.JoinChannel("Nezability",ICCommLib.CodeEnumICCommChannelType.Group)
 	self.channel:SetJoinResultFunction("OnITChannelJoin",self)
 	self.channel:IsReady()
 	self.channel:SetReceivedMessageFunction("OnITChannelMessage",self)
-	--self.channel = ICCommLib.JoinChannel("IT_" .. self.partyLeader, "OnITChannelMessage", self)
 	
 	self.wndMain:Invoke()
 	self:UpdateUI()
@@ -746,60 +733,6 @@ function debugprint(str)
 		Print(str)
 	end
 end
-
---[[function table.val_to_str ( v )
-  if "string" == type( v ) then
-    v = string.gsub( v, "\n", "\\n" )
-    if string.match( string.gsub(v,"[^'\"]",""), '^"+$' ) then
-      return "'" .. v .. "'"
-    end
-    return '"' .. string.gsub(v,'"', '\\"' ) .. '"'
-  else
-    return "table" == type( v ) and table.tostring( v ) or
-      tostring( v )
-  end
-end
-
-function table.key_to_str ( k )
-  if "string" == type( k ) and string.match( k, "^[_%a][_%a%d]*$" ) then
-    return k
-  else
-    return "[" .. table.val_to_str( k ) .. "]"
-  end
-end
-
-function table.tostring( tbl )
-  local result, done = {}, {}
-  for k, v in ipairs( tbl ) do
-    table.insert( result, table.val_to_str( v ) )
-    done[ k ] = true
-  end
-  for k, v in pairs( tbl ) do
-    if not done[ k ] then
-      table.insert( result,
-        table.key_to_str( k ) .. "=" .. table.val_to_str( v ) )
-    end
-  end
-  return "{" .. table.concat( result, "," ) .. "}"
-end
-function table.tostring( tbl )
-  local result, done = {}, {}
-  for k, v in ipairs( tbl ) do
-    table.insert( result, table.val_to_str( v ) )
-    done[ k ] = true
-  end
-  for k, v in pairs( tbl ) do
-    if not done[ k ] then
-      table.insert( result,
-        table.key_to_str( k ) .. "=" .. table.val_to_str( v ) )
-    end
-  end
-  return "{" .. table.concat( result, "," ) .. "}"
-end]]
-
-
-
-
 
 -----------------------------------------------------------------------------------------------
 -- Nezability Instance

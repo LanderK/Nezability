@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Addon Author="Nezha" APIVersion="10" Name="Nezability" Description="An addon to help coordinate interrupts between party members." Version="1.1">
-    <Script Name="Nezability.lua"/>
-    <Script Name="Nezability_UI.lua"/>
-	<!--Libraries-->
+<Addon Author="Nezha" APIVersion="10" Name="Nezability" Description="An addon to help coordinate interrupts between party/raid members." Version="1.1">
+    <!--Libraries-->
 	<Script Name="Libs/LibJSON/LibJSON-2.5.lua"/>
+	<!--Nezability Files-->
+	<Script Name="Nezability.lua"/>
+    <Script Name="Nezability_UI.lua"/>
 	<!--Forms-->
     <Form Name="Nezability.xml"/>
 </Addon>
