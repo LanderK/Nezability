@@ -251,7 +251,7 @@ function Nezability:OnDocLoaded()
 	Apollo.RegisterEventHandler("Group_MemberPromoted", "OnGroupMemberPromoted", self)
 	Apollo.RegisterEventHandler("AbilityBookChange", "OnAbilityBookChange", self)
 	
-	Apollo.RegisterSlashCommand("acc", "OnNezabilityOn", self)
+	Apollo.RegisterSlashCommand("nb", "OnNezabilityOn", self)
 	debugprint("Event/Slash handlers registered.")
 end
 
@@ -682,6 +682,7 @@ end
 function Nezability:OnNezabilityOn()
 	if self.wndMain:IsVisible() then
 		self.wndMain:Close()
+		Print("Type /nb to reactivate Nezability")
 	else
 	    self.wndMain:Invoke()
 	end
