@@ -184,6 +184,11 @@ function Nezability:new(o)
 			},
 		},
 		
+		--Hidden Class. Silly Carbine hidding classes from us
+		{
+		
+		},
+		
 		-- Spellslinger
 		{
 			[30160] = {
